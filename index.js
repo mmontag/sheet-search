@@ -22,6 +22,8 @@ const API_KEY = '';
 const SHEET_RANGE = 'Sheet1!A2:C';
 const SHEET_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_RANGE}?key=${API_KEY}`;
 const DRIVE_URL = `https://www.googleapis.com/drive/v3/files/${SHEET_ID}?fields=modifiedTime&key=${API_KEY}`;
+
+const PORT = 8081;
 const HEADERS = {
   // If running behind a proxy such as nginx,
   // configure it to ignore this CORS header
@@ -168,6 +170,6 @@ http.createServer(async function (req, res) {
     res.writeHead(500);
     res.end(`Server error\n${e}\n`);
   }
-}).listen(8080, 'localhost');
+}).listen(PORT, 'localhost');
 
 setInterval(checkForUpdates, CHECK_FOR_UPDATES_INTERVAL_MS);
