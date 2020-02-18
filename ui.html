@@ -1,0 +1,56 @@
+<html>
+<head>
+<script>
+  window.addEventListener('load', () => {
+  	var container = document.querySelector('.image-block');
+    container.innerHTML = '<div class="search-container">' + 
+      '<input placeholder="Search" id="search-input" type="text" class="search-input">' +
+      '<div class="search-results"></div>' + 
+      '</div>';
+    var input = document.querySelector('.search-input');
+    var searchResults = document.querySelector('.search-results');
+    input.addEventListener('keyup', () => {
+      var query = input.value;
+      if (query.length > 1) {
+        ((capturedQuery) => {
+          fetch('https://gifx.co/mint/search?query=' + encodeURIComponent(query))
+            .then(response => response.json())
+            .then(json => {
+              if (capturedQuery != query) {
+                console.log('out of order');
+                return;
+              }
+              searchResults.innerHTML = '<ul>' + json.items
+                    .map(item => '<li>' + item.artist + ' - ' + item.title + '</li>')
+                    .join('\n') + '</ul>';
+            });
+        })(query);
+      } else {
+        searchResults.innerHTML = '';
+      }
+    });
+  });
+</script>
+<style>
+  .search-container {
+    text-align: center;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  .search-input {
+    color: black;
+  }
+  .search-results {
+    text-align: left;
+  }
+</style>
+</head>
+<body>
+<h2>A Fake Squarespace Page</h2>
+
+<div class="image-block">
+	<img src="./spinner.gif"/>
+</div>
+
+</body>
+</html>
