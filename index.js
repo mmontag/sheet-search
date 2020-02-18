@@ -22,6 +22,7 @@ const API_KEY = '';
 const SHEET_RANGE = 'Sheet1!A2:C';
 const SHEET_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_RANGE}?key=${API_KEY}`;
 const DRIVE_URL = `https://www.googleapis.com/drive/v3/files/${SHEET_ID}?fields=modifiedTime&key=${API_KEY}`;
+const DEFAULT_LIMIT = 50;
 
 const PORT = 8081;
 const HEADERS = {
@@ -80,7 +81,9 @@ function fetchCatalog() {
 function createTrie(catalog) {
   const start = performance.now();
   const trie = new TrieSearch(['artist', 'title'], {
+    indexField: 'id',
     idFieldOrFunction: 'id',
+    splitOnRegEx: /[^a-zA-Z0-9]/,
   });
   trie.addAll(catalog);
   const time = (performance.now() - start).toFixed(1);
@@ -113,7 +116,7 @@ function checkForUpdates() {
 
 const routes = {
   'search': async (params) => {
-    const limit = parseInt(params.limit, 10);
+    const limit = parseInt(params.limit, 10) || DEFAULT_LIMIT;
     const query = params.query;
     const start = performance.now();
     let items = trie.get(query, TrieSearch.UNION_REDUCER) || [];
