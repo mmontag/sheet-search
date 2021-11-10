@@ -36,8 +36,12 @@ const CHECK_FOR_UPDATES_INTERVAL_MS = 5/* minutes */ * 60 * 1000;
 // For testing only
 // const CATALOG_PATH = './test.json';
 // let trie = createTrie(transformRangeResult(require(CATALOG_PATH)));
-let trie = null;
-fetchCatalog().then(catalog => trie = createTrie(catalog));
+let _trie = null;
+let _catalog = null;
+fetchCatalog().then(catalog => {
+  _catalog = catalog;
+  _trie = createTrie(catalog);
+});
 let lastModifiedTime = 0;
 fetchModifiedTime().then(modifiedTime => lastModifiedTime = modifiedTime);
 
@@ -63,6 +67,18 @@ function transformRangeResult(data) {
       title: value[2] ? value[2].trim() : null,
       // artistTitle: value[0].trim() + ' ' + value[2].trim();
     };
+  }).sort((a, b) => {
+    const [a_artist, a_title, b_artist, b_title] =
+      [a.artist, a.title, b.artist, b.title].map(s => s ? s.toLowerCase() : '');
+    if (a_artist === b_artist) {
+      if (a_title < b_title) return -1;
+      if (a_title > b_title) return 1;
+      return 0;
+    } else {
+      if (a_artist < b_artist) return -1;
+      if (a_artist > b_artist) return 1;
+      return 0;
+    }
   });
 }
 
@@ -119,7 +135,7 @@ const routes = {
     const limit = parseInt(params.limit, 10) || DEFAULT_LIMIT;
     const query = params.query;
     const start = performance.now();
-    let items = trie.get(query, TrieSearch.UNION_REDUCER) || [];
+    let items = _trie.get(query, TrieSearch.UNION_REDUCER) || [];
     const total = items.length;
     if (limit) items = items.slice(0, limit);
     const time = (performance.now() - start).toFixed(1);
@@ -135,7 +151,11 @@ const routes = {
   },
 
   'total': async (params) => {
-    return { total: files.length };
+    return { total: _catalog.length };
+  },
+
+  'browse': async (params) => {
+    return _catalog;
   },
 };
 
