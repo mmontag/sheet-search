@@ -1,56 +1,186 @@
-<html>
+<html lang="en">
 <head>
-<script>
-  window.addEventListener('load', () => {
-  	var container = document.querySelector('.image-block');
-    container.innerHTML = '<div class="search-container">' + 
-      '<input placeholder="Search" id="search-input" type="text" class="search-input">' +
-      '<div class="search-results"></div>' + 
-      '</div>';
-    var input = document.querySelector('.search-input');
-    var searchResults = document.querySelector('.search-results');
-    input.addEventListener('keyup', () => {
-      var query = input.value;
-      if (query.length > 1) {
-        ((capturedQuery) => {
-          fetch('https://gifx.co/mint/search?query=' + encodeURIComponent(query))
-            .then(response => response.json())
-            .then(json => {
-              if (capturedQuery != query) {
-                console.log('out of order');
-                return;
+  <title>Song Book</title>
+
+  <!-- ********** BEGIN Squarespace Page Header Code ********** -->
+  <!-- song search - matt montag -->
+  <script>
+    // const apiBase = 'https://gifx.co/mint';
+    const apiBase = 'http://localhost:8081';
+
+    window.addEventListener('DOMContentLoaded', initPage);
+    if (window.Squarespace) window.Squarespace.onInitialize(Y, initPage);
+
+    function initPage() {
+      initSearch();
+      initBrowse();
+    }
+
+    function initSearch() {
+      var container = document.querySelector('#page-5e4b982f74f9be5e21fcecda .image-block');
+      container.innerHTML = '' +
+        '<input placeholder="Search" id="search-input" type="text" class="search-input">' +
+        '<div class="search-container"></div>';
+      var input = document.querySelector('.search-input');
+      var searchContainer = document.querySelector('.search-container');
+      input.addEventListener('keyup', () => {
+        var query = input.value;
+        var limit = query.length >= 4 ? 500 : 50;
+        if (query.length > 1) {
+          ((capturedQuery) => {
+            fetch(apiBase + '/search?query=' + encodeURIComponent(query) + '&limit=' + limit)
+              .then(response => response.json())
+              .then(json => {
+                if (capturedQuery != query) {
+                  console.log('out of order');
+                  return;
+                }
+                searchContainer.innerHTML = '' +
+                  '<div class="search-results">' +
+                  '    <h4>' + json.total + ' Result' + (json.total === 1 ? '' : 's') + '</h4>' + json.items
+                    .map(item => '<div class="sr-item">' + item.artist + ' - ' + item.title + '</div>')
+                    .join('\n') +
+                  '</div>';
+                if (!json.items || json.items.length === 0) {
+                  searchContainer.innerHTML = '' +
+                    '<div class="search-results">' +
+                    '    <h4>No results</h4>' +
+                    '</div>';
+                }
+              });
+          })(query);
+        } else {
+          searchContainer.innerHTML = '';
+        }
+      });
+    }
+
+    function initBrowse() {
+      const catalogEl = document.querySelector('.catalog');
+      fetch(apiBase + '/browse')
+        .then(response => response.json())
+        .then(json => {
+          let curLetter = 0;
+          const catalogHtml = json
+            .filter(item =>
+              !!item.artist
+              && !!item.title
+              && !item.artist.toLowerCase().includes('yoder')
+              && !item.title.toLowerCase().includes('yoder')
+            )
+            .map(item => {
+              let html = '';
+              const firstLetter = item.artist[0].toUpperCase();
+              if (firstLetter >= 'A' && firstLetter !== curLetter) {
+                curLetter = firstLetter;
+                html += `<h2><a name="${curLetter}">${curLetter}</a></h2>`;
               }
-              searchResults.innerHTML = '<ul>' + json.items
-                    .map(item => '<li>' + item.artist + ' - ' + item.title + '</li>')
-                    .join('\n') + '</ul>';
-            });
-        })(query);
-      } else {
-        searchResults.innerHTML = '';
-      }
-    });
-  });
-</script>
-<style>
-  .search-container {
-    text-align: center;
-    max-width: 500px;
-    margin: 0 auto;
-  }
-  .search-input {
-    color: black;
-  }
-  .search-results {
-    text-align: left;
-  }
-</style>
+              html += `<div>${item.artist} - ${item.title}</div>`
+              return html;
+            })
+            .join('');
+          catalogEl.innerHTML = `<h2><a name="num">#</a></h2>` + catalogHtml;
+        });
+    }
+  </script>
+  <style>
+    .search-input {
+      color: black;
+      display: block;
+      margin: 0 auto 30px auto;
+      font-size: 150%;
+    }
+
+    .search-container {
+      text-align: center;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .search-results {
+      display: inline-block;
+      text-align: left;
+      padding: 30px;
+      background: rgba(128, 128, 128, 0.1);
+    }
+
+    .sr-item {
+      padding-left: 20px;
+      text-indent: -20px;
+    }
+
+    /* New additions for catalog browse */
+    .letters {
+      position: fixed;
+      top: 0;
+      right: 0;
+      z-index: 200;
+      background-color: #fff;
+      padding: 10px;
+      display: flex;
+      height: 100%;
+      box-sizing: border-box;
+      justify-content: space-evenly;
+      align-items: center;
+      flex-direction: column;
+      width: 50px;
+    }
+
+    .catalog {
+      margin-right: 50px;
+    }
+  </style>
+  <!-- ********** END Squarespace Page Header Code ********** -->
+
+  <style>
+    body {
+      background: black;
+      color: white;
+    }
+  </style>
+  <meta content="initial-scale=1" name="viewport">
 </head>
-<body>
-<h2>A Fake Squarespace Page</h2>
+<body id="page-5e4b982f74f9be5e21fcecda">
+<a name="top"></a>
+<h2>Song Book</h2>
 
 <div class="image-block">
-	<img src="./spinner.gif"/>
+  <img src="./spinner.gif"/>
 </div>
 
+<div class="catalog-container">
+  <div class="letters">
+    <a href="#top">Top</a>
+    <a href="#num">#</a>
+    <a href="#a">A</a>
+    <a href="#b">B</a>
+    <a href="#c">C</a>
+    <a href="#d">D</a>
+    <a href="#e">E</a>
+    <a href="#f">F</a>
+    <a href="#g">G</a>
+    <a href="#h">H</a>
+    <a href="#i">I</a>
+    <a href="#j">J</a>
+    <a href="#k">K</a>
+    <a href="#l">L</a>
+    <a href="#m">M</a>
+    <a href="#n">N</a>
+    <a href="#o">O</a>
+    <a href="#p">P</a>
+    <a href="#q">Q</a>
+    <a href="#r">R</a>
+    <a href="#s">S</a>
+    <a href="#t">T</a>
+    <a href="#u">U</a>
+    <a href="#v">V</a>
+    <a href="#w">W</a>
+    <a href="#x">X</a>
+    <a href="#y">Y</a>
+    <a href="#z">Z</a>
+  </div>
+  <div class="catalog">
+  </div>
+</div>
 </body>
 </html>
