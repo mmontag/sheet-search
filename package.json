@@ -9,7 +9,7 @@
   "author": "Matt Montag",
   "license": "ISC",
   "dependencies": {
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^2.6.7",
     "patch-package": "^6.2.0",
     "trie-search": "^1.2.11"
   }
