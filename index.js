@@ -5,9 +5,9 @@
  * Google Sheet Search
  * ᴍ ɪ ᴄ ʀ ᴏ s ᴇ ʀ ᴠ ᴇ ʀ
  *
- * for The Mint Karaoke Lounge song search
+ * A basic Google Sheets-powered music catalog API
  *
- * Matt Montag · February 2020
+ * Matt Montag · February 2020, November 2021
  *
  */
 
@@ -63,10 +63,23 @@ function transformRangeResult(data) {
   return data['values'].map((value, i) => {
     return {
       id: i,
-      artist: value[0] ? value[0].trim() : null, 
+      artist: value[0] ? value[0].trim() : null,
       title: value[2] ? value[2].trim() : null,
       // artistTitle: value[0].trim() + ' ' + value[2].trim();
     };
+  }).filter(item => {
+    return item.artist && item.title
+      && !item.artist.toLowerCase().includes('yoder')
+      && !item.title.toLowerCase().includes('yoder');
+  }).map(item => {
+    // Fix 'W E S T, K A N Y E', 'T L C', etc.
+    [item.artist, item.title] = [item.artist, item.title].map(str => {
+      if (str.match(/^[A-Z] [A-Z] [A-Z]/)) {
+        str = str.replace(/([A-Z]) /g, '$1');
+      }
+      return str;
+    });
+    return item;
   }).sort((a, b) => {
     const [a_artist, a_title, b_artist, b_title] =
       [a.artist, a.title, b.artist, b.title].map(s => s ? s.toLowerCase() : '');
