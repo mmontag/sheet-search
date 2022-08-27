@@ -7,7 +7,7 @@
  *
  * A basic Google Sheets-powered music catalog API
  *
- * Matt Montag · February 2020, November 2021
+ * Matt Montag · February 2020, November 2021, August 2022
  *
  */
 
@@ -22,6 +22,8 @@ const API_KEY = '';
 const SHEET_RANGE = 'Sheet1!A2:C';
 const SHEET_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_RANGE}?key=${API_KEY}`;
 const DRIVE_URL = `https://www.googleapis.com/drive/v3/files/${SHEET_ID}?fields=modifiedTime&key=${API_KEY}`;
+const ARTIST_COLUMN = 0;
+const TITLE_COLUMN = 1;
 const DEFAULT_LIMIT = 50;
 
 const PORT = 8081;
@@ -47,24 +49,30 @@ fetchModifiedTime().then(modifiedTime => lastModifiedTime = modifiedTime);
 
 function transformRangeResult(data) {
   /*
+
+  Expected data format:
+
   {
     "range": "Sheet1!A2:C500",
     "majorDimension": "ROWS",
     "values": [
       [
         " 1 Giant Leap & Maxi, Jazz & Robbie Williams",
-        "    /    ",
         " My Culture"
       ],
       ...
     ]
   }
   */
+  if (!data || !data.values) {
+    console.log('Sheet data:', data);
+    throw new Error('Bad sheet data');
+  }
   return data['values'].map((value, i) => {
     return {
       id: i,
-      artist: value[0] ? value[0].trim() : null,
-      title: value[2] ? value[2].trim() : null,
+      artist: value[ARTIST_COLUMN] ? value[ARTIST_COLUMN].trim() : null,
+      title: value[TITLE_COLUMN] ? value[TITLE_COLUMN].trim() : null,
       // artistTitle: value[0].trim() + ' ' + value[2].trim();
     };
   }).filter(item => {
@@ -104,7 +112,11 @@ function fetchModifiedTime() {
 function fetchCatalog() {
   return fetch(SHEET_URL)
     .then(response => response.json())
-    .then(json => transformRangeResult(json));
+    .then(json => transformRangeResult(json))
+    .catch(e => {
+      console.log('Error fetching catalog!', e);
+      return [];
+    });
 }
 
 function createTrie(catalog) {
