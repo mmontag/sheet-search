@@ -180,7 +180,15 @@ const routes = {
   },
 
   'browse': async (params) => {
-    return _catalog;
+    const offset = +(params.offset || 0);
+    const limit = +(params.limit || 0);
+    let items = _catalog;
+    if (limit) {
+      items = _catalog.slice(offset, offset + limit);
+    } else if (offset) {
+      items = _catalog.slice(offset);
+    }
+    return items;
   },
 };
 
