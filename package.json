@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "node-fetch": "^2.6.1",
-    "patch-package": "^6.2.0",
+    "patch-package": "^6.5.1",
     "trie-search": "^1.2.11"
   }
 }
